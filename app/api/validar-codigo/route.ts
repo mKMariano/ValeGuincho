@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 const API_TOKEN = process.env.CAUTOO_API_TOKEN
-const GIFTCARD_API_URL = "https://giftcard-api-4sk8.onrender.com/api/resgatar"
+const GIFTCARD_API_URL = process.env.GIFTCARD_API_URL
 
 export async function POST(request: NextRequest) {
   try {
