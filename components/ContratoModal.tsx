@@ -36,7 +36,7 @@ export function ContratoModal({
         
         {/* Corpo com scroll */}
         <div className="flex-1 overflow-y-auto p-6">
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line text-justify">
             {contractText}
           </p>
         </div>
