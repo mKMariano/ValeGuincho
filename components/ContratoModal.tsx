@@ -41,14 +41,19 @@ export function ContratoModal({
           </p>
         </div>
         
-        {/* Rodapé com os botões */}
-        <div className="p-6 border-t bg-gray-50 flex gap-4 justify-end rounded-b-lg">
-          <Button onClick={onClose} variant="outline" className="px-6" disabled={isLoading}>
+        {/* Rodapé com os botões (Área atualizada) */}
+        <div className="p-6 border-t bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+          <Button 
+            onClick={onClose} 
+            variant="outline" 
+            className="w-full sm:w-auto px-6" 
+            disabled={isLoading}
+          >
             Cancelar
           </Button>
           <Button
             onClick={onConfirm}
-            className="bg-[#25D366] hover:bg-[#1da851] text-white px-6 font-semibold"
+            className="w-full sm:w-auto bg-[#25D366] hover:bg-[#1da851] text-white px-6 font-semibold"
             disabled={isLoading}
           >
             {isLoading ? (
