@@ -20,6 +20,8 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
         <Analytics />
+        {/* ADICIONADO: Ponto de entrada para o Portal do Modal */}
+        <div id="modal-portal" />
       </body>
     </html>
   )
