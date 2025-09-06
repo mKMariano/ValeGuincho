@@ -7,6 +7,9 @@ import { collection, addDoc } from "firebase/firestore";
 // const formularios: any[] = []
 
 export async function POST(request: NextRequest) {
+  // LINHA DE DIAGNÓSTICO: Verifica se a variável de ambiente está sendo lida
+  console.log("A chave do projeto Firebase é:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+
   try {
     const data = await request.json();
 
