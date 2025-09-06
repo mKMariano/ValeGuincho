@@ -1,29 +1,45 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getFormularios } from "../../cadastro/route"
+// app/api/admin/cadastros/route.ts
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, limit, startAfter, getCountFromServer, doc, getDoc } from "firebase/firestore";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const pagina = Math.max(1, Number.parseInt(searchParams.get("pagina") || "1"))
-    const porPagina = Number.parseInt(searchParams.get("por_pagina") || "20")
+    const { searchParams } = new URL(request.url);
+    const pagina = Math.max(1, Number.parseInt(searchParams.get("pagina") || "1"));
+    const porPagina = Number.parseInt(searchParams.get("por_pagina") || "20");
 
-    const formularios = getFormularios()
-    const total = formularios.length
-    const totalPaginas = Math.ceil(total / porPagina)
-    const offset = (pagina - 1) * porPagina
+    const cadastrosRef = collection(db, "valeguinchogiftcard");
+    
+    // 1. Contar o total de documentos para a paginação
+    const countSnapshot = await getCountFromServer(cadastrosRef);
+    const total = countSnapshot.data().count;
+    const totalPaginas = Math.ceil(total / porPagina);
 
-    // Ordenar por data_envio DESC e paginar (replicando lógica do plugin)
-    const dados = formularios
-      .sort((a, b) => new Date(b.data_envio).getTime() - new Date(a.data_envio).getTime())
-      .slice(offset, offset + porPagina)
+    let q = query(cadastrosRef, orderBy("data_envio", "desc"), limit(porPagina));
+
+    // 2. Lógica para buscar a página correta
+    if (pagina > 1) {
+      // Para encontrar o ponto de partida da página atual, precisamos buscar
+      // os documentos até a página anterior.
+      const offsetQuery = query(collection(db, "valeguinchogiftcard"), orderBy("data_envio", "desc"), limit((pagina - 1) * porPagina));
+      const previousDocsSnapshot = await getDocs(offsetQuery);
+      // O "cursor" para a nossa busca será o último documento da página anterior.
+      const lastVisible = previousDocsSnapshot.docs[previousDocsSnapshot.docs.length - 1];
+      q = query(cadastrosRef, orderBy("data_envio", "desc"), startAfter(lastVisible), limit(porPagina));
+    }
+
+    const querySnapshot = await getDocs(q);
+    const dados = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     return NextResponse.json({
       dados,
       total,
       total_paginas: totalPaginas,
       pagina_atual: pagina,
-    })
+    });
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao buscar cadastros" }, { status: 500 })
+    console.error("Erro ao buscar cadastros:", error);
+    return NextResponse.json({ error: "Erro ao buscar cadastros" }, { status: 500 });
   }
 }
