@@ -3,17 +3,20 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
-// A simulação de banco de dados em memória não é mais necessária
-// const formularios: any[] = []
-
 export async function POST(request: NextRequest) {
-  // LINHA DE DIAGNÓSTICO: Verifica se a variável de ambiente está sendo lida
+  console.log("--- REQUISIÇÃO RECEBIDA EM /api/cadastro ---");
+  console.log("VERIFICANDO VARIÁVEIS DE AMBIENTE...");
   console.log("A chave do projeto Firebase é:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
 
+  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    console.error("ERRO CRÍTICO: Variáveis de ambiente do Firebase não foram carregadas!");
+    return NextResponse.json({ error: "Configuração do servidor incompleta." }, { status: 500 });
+  }
+
   try {
+    console.log("Processando dados da requisição...");
     const data = await request.json();
 
-    // Sanitização dos dados (replicando sanitize_text_field do WordPress)
     const dados = {
       codigo: (data.codigo || "").toString().trim(),
       nome: (data.nome || "").toString().trim(),
@@ -30,34 +33,33 @@ export async function POST(request: NextRequest) {
       cidade: (data.cidade || "").toString().trim(),
       estado: (data.estado || "").toString().trim(),
       segmento: (data.segmento || "").toString().trim(),
-      data_envio: new Date().toISOString(), // Usando formato padrão ISO 8601
+      data_envio: new Date().toISOString(),
       primeiro_nome: (data.primeiro_nome || "").toString().trim(),
-      exportado: false, // Usando booleano para mais clareza
+      exportado: false,
     };
+    console.log("Dados prontos para salvar:", dados);
 
-    // Salvar no Firestore na coleção "valeguinchogiftcard"
+    console.log("Tentando salvar no Firestore na coleção 'valeguinchogiftcard'...");
     const docRef = await addDoc(collection(db, "valeguinchogiftcard"), dados);
-    console.log("Documento salvo no Firestore com ID: ", docRef.id);
+    console.log("SUCESSO! Documento salvo no Firestore com ID: ", docRef.id);
 
-    // Gift Card API (URL exata do plugin)
     try {
+      console.log("Marcando código como usado na API GiftCard...");
       await fetch("https://giftcard-api-4sk8.onrender.com/api/resgatar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ codigo: dados.codigo, marcar: true }),
       });
+      console.log("Código marcado como usado.");
     } catch (error) {
-      console.error("Erro Gift Card API:", error);
+      console.error("Erro ao comunicar com a API Gift Card:", error);
     }
-
-    // ... (o restante do seu código para consultar a placa, enviar ao Google Sheets e BotConversa continua igual) ...
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {
-    console.error("Erro no cadastro:", error);
+    console.error("--- ERRO NO BLOCO CATCH DE /api/cadastro ---");
+    console.error("Ocorreu um erro ao tentar processar o cadastro:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
-// A função getFormularios não é mais necessária neste arquivo, pois os dados vêm do Firestore.
-// Vamos removê-la para evitar confusão.
